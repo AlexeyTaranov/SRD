@@ -11,7 +11,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
     [CustomPropertyDrawer(typeof(AnyType<>))]
     public class AnyTypeDrawer : PropertyDrawer
     {
-        private static readonly (string typeEnum, string unityObject, string nativeObject) PropertyName =
+        public static readonly (string typeEnum, string unityObject, string nativeObject) PropertyName =
             ("isUnityObjectReference", "unityObject", "nativeObject");
 
         private Type targetAbstractType;
@@ -30,66 +30,32 @@ namespace SerializeReferenceDropdown.Editor.AnyType
                 .FindPropertyRelative(PropertyName.nativeObject)
                 .managedReferenceFieldTypename);
 
-            EditorGUI.BeginProperty(rect, label, property);
-            var indent = EditorGUI.indentLevel;
-            EditorGUI.indentLevel = 0;
+            AnyTypeDrawerIMGUI.Draw(rect, property, label,
+                obj => FillUnityObjectToAnyTypeProperty(obj, property),
+                () => ShowSearchPicker(property));
+        }
 
-            var refTypeProperty = property.FindPropertyRelative(PropertyName.typeEnum);
-            var isUnityObj = refTypeProperty.boolValue;
+        private void ShowSearchPicker(SerializedProperty property)
+        {
+            SearchService.ShowObjectPicker(
+                (o, _) => FillUnityObjectToAnyTypeProperty(o, property), null, GetSearchFilter(), null,
+                typeof(Object), flags: SearchFlags.Expression);
 
-            var leftButtonRect = DrawLeftReferenceTypeButton();
-
-            rect.width -= 40;
-            rect.x += 40;
-            if (isUnityObj)
+            string GetSearchFilter()
             {
-                DrawIMGUIUnityReferenceType();
-            }
-            else
-            {
-                EditorGUI.PropertyField(rect, property.FindPropertyRelative(PropertyName.nativeObject), label);
-            }
+                var unityTypes = TypeCache.GetTypesDerivedFrom(targetAbstractType).Where(IsAssignableUnityType);
 
-            EditorGUI.indentLevel = indent;
-            EditorGUI.EndProperty();
-
-            Rect DrawLeftReferenceTypeButton()
-            {
-                var refTypeButton = isUnityObj ? "U" : "#";
-                var buttonRect = new Rect(rect);
-                buttonRect.width = 20;
-                buttonRect.height = EditorGUIUtility.singleLineHeight;
-                if (GUI.Button(buttonRect, refTypeButton))
+                var sb = new StringBuilder();
+                foreach (var type in unityTypes)
                 {
-                    isUnityObj = !isUnityObj;
-                    refTypeProperty.boolValue = isUnityObj;
-                    refTypeProperty.serializedObject.ApplyModifiedProperties();
+                    sb.Append($"t:{type.Name} ");
                 }
 
-                return buttonRect;
-            }
+                return sb.ToString();
 
-            void DrawIMGUIUnityReferenceType()
-            {
-                var unityObjectProperty = property.FindPropertyRelative(PropertyName.unityObject);
-                var searchButton = new Rect(leftButtonRect);
-                searchButton.x += leftButtonRect.width + 5;
-                searchButton.width = 35;
-                rect.x += 25;
-                rect.width -= 25;
-
-                if (GUI.Button(searchButton, "Pick"))
+                bool IsAssignableUnityType(Type type)
                 {
-                    SearchService.ShowObjectPicker(
-                        (o, _) => FillUnityObjectToAnyTypeProperty(o, property), null, GetSearchFilter(), null,
-                        typeof(Object), flags: SearchFlags.Expression);
-                }
-
-                var newObject = EditorGUI.ObjectField(rect, label, unityObjectProperty.objectReferenceValue,
-                    typeof(Object), true);
-                if (unityObjectProperty.objectReferenceValue != newObject)
-                {
-                    FillUnityObjectToAnyTypeProperty(newObject, property);
+                    return TypeUtils.IsFinalAssignableType(type) && type.IsSubclassOf(typeof(Object));
                 }
             }
         }
@@ -132,24 +98,6 @@ namespace SerializeReferenceDropdown.Editor.AnyType
                 }
 
                 return null;
-            }
-        }
-
-        private string GetSearchFilter()
-        {
-            var unityTypes = TypeCache.GetTypesDerivedFrom(targetAbstractType).Where(IsAssignableUnityType);
-
-            var sb = new StringBuilder();
-            foreach (var type in unityTypes)
-            {
-                sb.Append($"t:{type.Name} ");
-            }
-
-            return sb.ToString();
-
-            bool IsAssignableUnityType(Type type)
-            {
-                return TypeUtils.IsFinalAssignableType(type) && type.IsSubclassOf(typeof(Object));
             }
         }
     }
