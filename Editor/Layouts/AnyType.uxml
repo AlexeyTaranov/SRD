@@ -1,0 +1,20 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements"
+         xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements"
+         noNamespaceSchemaLocation="../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <ui:VisualElement style="flex-grow: 1; flex-direction: row; flex-wrap: nowrap; min-height: 20px;">
+        <ui:Toggle binding-path="isUnityObjectReference" name="unityTypeToggle"
+                   style="position: absolute; max-height: 30px; max-width: 30px;"/>
+        <ui:Label text="Some Variable"
+                  style="position: absolute; left: 25px; max-width: 80px; justify-content: center; -unity-text-align: upper-center; text-overflow: ellipsis;"/>
+        <ui:VisualElement name="unityObject"
+                          style="flex-grow: 1; flex-direction: row; display: flex; position: absolute; left: 110px;">
+            <ui:Button name="pickButton" tabindex="-1" text="Pick" display-tooltip-when-elided="true"
+                       style="max-height: 18px; max-width: 40px;"/>
+            <uie:ObjectField allow-scene-objects="true" binding-path="unityObject" name="unityObjectField"/>
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0); flex-direction: row;">
+        <ui:VisualElement style="flex-grow: 1; max-width: 25px;"/>
+        <uie:PropertyField name="nativeObject" binding-path="nativeObject" style="min-width: 250px; margin-left: 6px;"/>
+    </ui:VisualElement>
+</ui:UXML>

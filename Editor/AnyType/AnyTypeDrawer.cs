@@ -3,8 +3,11 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEditor.Search;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 using Object = UnityEngine.Object;
+using ObjectField = UnityEditor.UIElements.ObjectField;
 
 namespace SerializeReferenceDropdown.Editor.AnyType
 {
@@ -33,6 +36,48 @@ namespace SerializeReferenceDropdown.Editor.AnyType
             AnyTypeDrawerIMGUI.Draw(rect, property, label,
                 obj => FillUnityObjectToAnyTypeProperty(obj, property),
                 () => ShowSearchPicker(property));
+        }
+        
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var root = new VisualElement();
+            targetAbstractType = TypeUtils.ExtractTypeFromString(property
+                .FindPropertyRelative(PropertyName.nativeObject)
+                .managedReferenceFieldTypename);
+            
+            string uiToolkitLayoutPath =
+                "Packages/com.alexeytaranov.serializereferencedropdown/Editor/Layouts/AnyType.uxml";
+            var visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(uiToolkitLayoutPath);
+            root.Add(visualTreeAsset.Instantiate());
+            
+            root.Bind(property.serializedObject);
+            
+            var nativeObject = root.Q<VisualElement>("nativeObject"); 
+            var unityObject = root.Q<VisualElement>("unityObject"); 
+            
+            var unityTypeToggle = root.Q<Toggle>("unityTypeToggle");
+            unityTypeToggle.RegisterValueChangedCallback(evt => UpdateNativeAndUnityObjectVisibility(evt.newValue));
+            UpdateNativeAndUnityObjectVisibility(unityTypeToggle.value);
+            
+            root.Q<Button>("pickButton").RegisterCallback<ClickEvent>(OnSelectorPicked);
+            root.Q<ObjectField>("unityObjectField").RegisterValueChangedCallback(OnUnityObjectSelected);
+            return root;
+            
+            void UpdateNativeAndUnityObjectVisibility(bool isUnityType)
+            {
+                unityObject.SetEnabled(isUnityType);
+                nativeObject.SetEnabled(isUnityType == false);
+            }
+            
+            void OnSelectorPicked(ClickEvent _)
+            {
+                ShowSearchPicker(property);
+            }
+            
+            void OnUnityObjectSelected(ChangeEvent<Object> evt)
+            {
+                FillUnityObjectToAnyTypeProperty(evt.newValue, property);
+            }
         }
 
         private void ShowSearchPicker(SerializedProperty property)
