@@ -51,7 +51,7 @@ namespace SerializeReferenceDropdown.Editor
             {
                 root.Add(new PropertyField(property));
             }
-        
+
             return root;
         }
 

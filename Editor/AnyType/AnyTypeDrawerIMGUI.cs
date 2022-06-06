@@ -7,7 +7,8 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 {
     public static class AnyTypeDrawerIMGUI
     {
-        public static void Draw(Rect rect, SerializedProperty property, GUIContent label,Action<Object> writeNewObject, Action onClickPicker)
+        public static void Draw(Rect rect, SerializedProperty property, GUIContent label, Action<Object> writeNewObject,
+            Action onClickPicker)
         {
             EditorGUI.BeginProperty(rect, label, property);
             var indent = EditorGUI.indentLevel;
@@ -57,7 +58,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
                 searchButton.width = 35;
                 rect.x += 25;
                 rect.width -= 25;
-                
+
                 if (GUI.Button(searchButton, "Pick"))
                 {
                     onClickPicker.Invoke();
