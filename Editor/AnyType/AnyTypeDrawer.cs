@@ -52,6 +52,7 @@ namespace SerializeReferenceDropdown.Editor.AnyType
 
             root.Bind(property.serializedObject);
 
+            root.Q<Label>("typeName").text = property.displayName;
             var nativeObject = root.Q<VisualElement>("nativeObject");
             var unityObject = root.Q<VisualElement>("unityObject");
 
